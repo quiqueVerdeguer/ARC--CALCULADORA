@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Calculadora con el Método ARC</title>
+  <style>
+    :root{--bg:#0b1020;--card:#121a2b;--text:#eaf2ff;--muted:#a9b8d6;--ring:0 0 0 3px rgba(56,189,248,.35);--brand:#38bdf8}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:linear-gradient(180deg,#0b1020,#0a0f1f);font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial;color:var(--text);line-height:1.55}
+    .wrap{max-width:800px;margin:0 auto;padding:28px}
+    header{text-align:center;margin:10px 0 22px}
+    h1{margin:0;font-size:clamp(24px,4vw,36px)}
+    .card{background:var(--card);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:18px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+    .grid{display:grid;gap:12px}
+    @media(min-width:680px){.grid{grid-template-columns:1fr 1fr}}
+    label{display:block;font-weight:600;margin:6px 0 6px}
+    input,select,button{width:100%;padding:12px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:#0c1528;color:var(--text);outline:none}
+    input:focus,select:focus{box-shadow:var(--ring);border-color:var(--brand)}
+    .row{display:grid;gap:12px}
+    button.primary{background:linear-gradient(90deg,#06b6d4,#3b82f6);border:0;font-weight:800;cursor:pointer}
+    .result{margin-top:12px;padding:14px;border-radius:14px;background:#0c1528;border:1px solid rgba(255,255,255,.08)}
+    .muted{color:var(--muted);font-size:.95rem}
+    .logo{display:inline-block;margin-top:6px;font-weight:900;letter-spacing:.25em;color:#fff;border:1px solid rgba(255,255,255,.12);border-radius:999px;padding:6px 12px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>Calculadora con el <strong>Método ARC</strong></h1>
+      <div class="logo">MÉTODO ARC</div>
+    </header>
+
+    <section class="card">
+      <div class="row">
+        <div class="grid">
+          <div>
+            <label for="sexo">Sexo</label>
+            <select id="sexo" aria-label="Sexo">
+              <option value="hombre">Hombre</option>
+              <option value="mujer">Mujer</option>
+            </select>
+          </div>
+          <div>
+            <label for="edad">Edad (años)</label>
+            <input id="edad" type="number" inputmode="numeric" placeholder="30" min="10" max="100" />
+          </div>
+          <div>
+            <label for="peso">Peso (kg)</label>
+            <input id="peso" type="number" inputmode="decimal" placeholder="70" min="30" max="250" step="0.1" />
+          </div>
+          <div>
+            <label for="altura">Altura (cm)</label>
+            <input id="altura" type="number" inputmode="numeric" placeholder="175" min="120" max="230" />
+          </div>
+        </div>
+        <div>
+          <label>&nbsp;</label>
+          <button id="btnCalcular" class="primary">Calcular Metabolismo Basal</button>
+          <p class="muted" style="margin-top:10px">Fórmula: Mifflin–St Jeor. Resultado en kcal/día.</p>
+          <div id="resultado" class="result" aria-live="polite" hidden></div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const $ = (id)=>document.getElementById(id);
+    const redondear = (n)=> Math.round(Number(n)||0);
+    function validarValor(v, min, max){ const n = Number(v); return Number.isFinite(n) && n>=min && n<=max; }
+
+    function mifflin({sexo, edad, peso, altura}){
+      const base = 10*peso + 6.25*altura - 5*edad;
+      return sexo === 'hombre' ? base + 5 : base - 161;
+    }
+
+    function calcular(){
+      const datos = {
+        sexo: $('sexo').value,
+        edad: Number($('edad').value),
+        peso: Number($('peso').value),
+        altura: Number($('altura').value)
+      };
+
+      const ok = validarValor(datos.edad,10,100) && validarValor(datos.peso,30,250) && validarValor(datos.altura,120,230);
+      const box = $('resultado');
+      if(!ok){
+        box.hidden=false; box.innerHTML='<span style="color:#fca5a5">Revisa los valores introducidos.</span>'; return;
+      }
+      const bmr = mifflin(datos);
+      box.hidden=false;
+      box.innerHTML = `<div><strong>Metabolismo Basal estimado:</strong><br><span style="font-size:2rem;font-weight:800">${redondear(bmr).toLocaleString('es-ES')} kcal/día</span></div>`;
+    }
+
+    // Acciones UI
+    $('btnCalcular').addEventListener('click', calcular);
+
+    // Tests mínimos en consola (no afectan al usuario)
+    (function tests(){
+      const t1 = Math.round(mifflin({sexo:'hombre',edad:30,peso:70,altura:175}));
+      console.assert(t1 === Math.round(10*70 + 6.25*175 - 5*30 + 5), 'Test hombre 30/70/175');
+      const t2 = Math.round(mifflin({sexo:'mujer',edad:25,peso:60,altura:165}));
+      console.assert(t2 === Math.round(10*60 + 6.25*165 - 5*25 - 161), 'Test mujer 25/60/165');
+    })();
+  </script>
+</body>
+</html>
